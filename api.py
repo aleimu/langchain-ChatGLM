@@ -1,4 +1,4 @@
-#encoding:utf-8
+# encoding:utf-8
 import argparse
 import json
 import os
@@ -300,7 +300,6 @@ async def update_doc(
                 return BaseResponse(code=500, msg=file_status)
 
 
-
 async def local_doc_chat(
         knowledge_base_id: str = Body(..., description="Knowledge Base Name", example="kb1"),
         question: str = Body(..., description="Question", example="工伤保险是什么？"),
@@ -327,26 +326,30 @@ async def local_doc_chat(
         )
     else:
         if (streaming):
-            def generate_answer ():
+            def generate_answer():
                 last_print_len = 0
                 for resp, next_history in local_doc_qa.get_knowledge_based_answer(
-                    query=question, vs_path=vs_path, chat_history=history, streaming=True
+                        query=question, vs_path=vs_path, chat_history=history, streaming=True
                 ):
                     yield resp["result"][last_print_len:]
-                    last_print_len=len(resp["result"])
+                    last_print_len = len(resp["result"])
 
             return StreamingResponse(generate_answer())
         else:
-            for resp, history in local_doc_qa.get_knowledge_based_answer(
-                    query=question, vs_path=vs_path, chat_history=history, streaming=True
-            ):
-                pass
-                    
-            source_documents = [
-                f"""出处 [{inum + 1}] {os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
-                f"""相关度：{doc.metadata['score']}\n\n"""
-                for inum, doc in enumerate(resp["source_documents"])
-            ]
+            def _sync_method(question, history):
+                # 同步方法的代码
+                for resp, history in local_doc_qa.get_knowledge_based_answer(
+                        query=question, vs_path=vs_path, chat_history=history, streaming=True
+                ):
+                    pass
+                source_documents = [
+                    f"""出处 [{inum + 1}] {os.path.split(doc.metadata['source'])[-1]}：\n\n{doc.page_content}\n\n"""
+                    f"""相关度：{doc.metadata['score']}\n\n"""
+                    for inum, doc in enumerate(resp["source_documents"])
+                ]
+                return resp, source_documents
+
+            resp, source_documents = await asyncio.to_thread(_sync_method, question=question, history=history)
 
             return ChatMessage(
                 question=question,
@@ -369,15 +372,19 @@ async def bing_search_chat(
             ],
         ),
 ):
-    for resp, history in local_doc_qa.get_search_result_based_answer(
-            query=question, chat_history=history, streaming=True
-    ):
-        pass
-    source_documents = [
-        f"""出处 [{inum + 1}] [{doc.metadata["source"]}]({doc.metadata["source"]}) \n\n{doc.page_content}\n\n"""
-        for inum, doc in enumerate(resp["source_documents"])
-    ]
+    def _sync_method(question, history):
+        # 同步方法的代码
+        for resp, history in local_doc_qa.get_search_result_based_answer(
+                query=question, chat_history=history, streaming=True
+        ):
+            pass
+        source_documents = [
+            f"""出处 [{inum + 1}] [{doc.metadata["source"]}]({doc.metadata["source"]}) \n\n{doc.page_content}\n\n"""
+            for inum, doc in enumerate(resp["source_documents"])
+        ]
+        return resp, source_documents
 
+    resp, source_documents = await asyncio.to_thread(_sync_method, question=question, history=history)
     return ChatMessage(
         question=question,
         response=resp["result"],
@@ -401,16 +408,28 @@ async def chat(
         ),
 ):
     if (streaming):
-        def generate_answer ():
+        def generate_answer():
             last_print_len = 0
             answer_result_stream_result = local_doc_qa.llm_model_chain(
                 {"prompt": question, "history": history, "streaming": True})
             for answer_result in answer_result_stream_result['answer_result_stream']:
                 yield answer_result.llm_output["answer"][last_print_len:]
                 last_print_len = len(answer_result.llm_output["answer"])
-            
+
         return StreamingResponse(generate_answer())
     else:
+        def _sync_method(question, history):
+            # 同步方法的代码
+            answer_result_stream_result = local_doc_qa.llm_model_chain(
+                {"prompt": question, "history": history, "streaming": True})
+
+            for answer_result in answer_result_stream_result['answer_result_stream']:
+                resp = answer_result.llm_output["answer"]
+                history = answer_result.history
+                pass
+            return resp, history
+
+        resp, history = await asyncio.to_thread(_sync_method, question=question, history=history)
         answer_result_stream_result = local_doc_qa.llm_model_chain(
             {"prompt": question, "history": history, "streaming": True})
         for answer_result in answer_result_stream_result['answer_result_stream']:
@@ -424,19 +443,6 @@ async def chat(
             history=history,
             source_documents=[],
         )
-    answer_result_stream_result = local_doc_qa.llm_model_chain(
-        {"prompt": question, "history": history, "streaming": True})
-
-    for answer_result in answer_result_stream_result['answer_result_stream']:
-        resp = answer_result.llm_output["answer"]
-        history = answer_result.history
-        pass
-    return ChatMessage(
-        question=question,
-        response=resp,
-        history=history,
-        source_documents=[],
-    )
 
 
 async def stream_chat(websocket: WebSocket):
@@ -482,6 +488,7 @@ async def stream_chat(websocket: WebSocket):
         )
         turn += 1
 
+
 async def stream_chat_bing(websocket: WebSocket):
     """
     基于bing搜索的流式问答
@@ -495,7 +502,8 @@ async def stream_chat_bing(websocket: WebSocket):
         await websocket.send_json({"question": question, "turn": turn, "flag": "start"})
 
         last_print_len = 0
-        for resp, history in local_doc_qa.get_search_result_based_answer(question, chat_history=history, streaming=True):
+        for resp, history in local_doc_qa.get_search_result_based_answer(question, chat_history=history,
+                                                                         streaming=True):
             await websocket.send_text(resp["result"][last_print_len:])
             last_print_len = len(resp["result"])
 
@@ -517,6 +525,7 @@ async def stream_chat_bing(websocket: WebSocket):
             )
         )
         turn += 1
+
 
 async def document():
     return RedirectResponse(url="/docs")
@@ -561,7 +570,8 @@ def api_start(host, port, **kwargs):
     app.get("/local_doc_qa/list_files", response_model=ListDocsResponse, summary="获取知识库内的文件列表")(list_docs)
     app.delete("/local_doc_qa/delete_knowledge_base", response_model=BaseResponse, summary="删除知识库")(delete_kb)
     app.delete("/local_doc_qa/delete_file", response_model=BaseResponse, summary="删除知识库内的文件")(delete_doc)
-    app.post("/local_doc_qa/update_file", response_model=BaseResponse, summary="上传文件到知识库，并删除另一个文件")(update_doc)
+    app.post("/local_doc_qa/update_file", response_model=BaseResponse, summary="上传文件到知识库，并删除另一个文件")(
+        update_doc)
 
     local_doc_qa = LocalDocQA()
     local_doc_qa.init_cfg(
