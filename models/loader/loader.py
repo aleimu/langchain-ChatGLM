@@ -130,7 +130,7 @@ class LoaderCheckPoint:
                 if num_gpus < 2 and self.device_map is None:
                     # if LORA_MODEL_PATH_BAICHUAN is not None:
                     if LORA_MODEL_PATH_BAICHUAN:
-                        if LLM_MODEL == "Baichuan-13B-Chat":
+                        if LLM_MODEL == "Baichuan-13b-Chat":
                             model = AutoModelForCausalLM.from_pretrained(checkpoint, torch_dtype=torch.float16,
                                                                          device_map="auto", trust_remote_code=True, )
                             model.generation_config = GenerationConfig.from_pretrained(checkpoint)

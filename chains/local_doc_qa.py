@@ -242,7 +242,7 @@ class LocalDocQA:
             prompt = query
 
         # 接入baichuan的代码分支：
-        if LLM_MODEL == "Baichuan-13B-Chat":
+        if LLM_MODEL == "Baichuan-13b-Chat":
             for answer_result in self.llm_model_chain._generate_answer(prompt=prompt, history=chat_history,
                                                                        streaming=streaming):
                 resp = answer_result.llm_output["answer"]

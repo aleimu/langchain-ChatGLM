@@ -85,15 +85,25 @@ def get_answer(query, vs_path, history, mode, score_threshold=VECTOR_SEARCH_SCOR
             yield history + [[query,
                               "请选择知识库后进行测试，当前未选择知识库。"]], ""
     else:
+        # 接入baichuan的代码分支：
+        if LLM_MODEL == "Baichuan-13b-Chat":
+            for answer_result in local_doc_qa.llm_model_chain._generate_answer(prompt=query, history=history,
+                                                                               streaming=streaming):
+                resp = answer_result.llm_output["answer"]
+                history = answer_result.history
+                response = {"query": query,
+                            "result": resp,
+                            "source_documents": []}
+                yield response, history
+        else:  # 原本逻辑分支：
+            answer_result_stream_result = local_doc_qa.llm_model_chain(
+                {"prompt": query, "history": history, "streaming": streaming})
 
-        answer_result_stream_result = local_doc_qa.llm_model_chain(
-            {"prompt": query, "history": history, "streaming": streaming})
-
-        for answer_result in answer_result_stream_result['answer_result_stream']:
-            resp = answer_result.llm_output["answer"]
-            history = answer_result.history
-            history[-1][-1] = resp
-            yield history, ""
+            for answer_result in answer_result_stream_result['answer_result_stream']:
+                resp = answer_result.llm_output["answer"]
+                history = answer_result.history
+                history[-1][-1] = resp
+                yield history, ""
     logger.info(f"flagging: username={FLAG_USER_NAME},query={query},vs_path={vs_path},mode={mode},history={history}")
     flag_csv_logger.flag([query, vs_path, history, mode], username=FLAG_USER_NAME)
 

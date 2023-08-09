@@ -1,9 +1,10 @@
 from abc import ABC
 from langchain.llms.base import LLM
-from typing import Optional, List
+from typing import Optional, List, Any, Dict
 from models.loader import LoaderCheckPoint
 from models.base import (BaseAnswer,
                          AnswerResult)
+
 
 class BaichuanLLMChain(BaseAnswer, LLM, ABC):
     max_token: int = 10000
@@ -32,18 +33,10 @@ class BaichuanLLMChain(BaseAnswer, LLM, ABC):
     def set_history_len(self, history_len: int = 10) -> None:
         self.history_len = history_len
 
-    def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
+    def _call(self, prompt: Dict[str, Any], stop: Optional[List[str]] = None) -> str:
         print(f"__call:{prompt}")
-        response, _ = self.checkPoint.model.chat(
-            self.checkPoint.tokenizer,
-            prompt,
-            # history=[],
-            # max_length=self.max_token,
-            # temperature=self.temperature
-        )
-        print(f"response:{response}")
-        print(f"+++++++++++++++++++++++++++++++++++")
-        return response
+        yield self._generate_answer(prompt=prompt.get("prompt"), history=prompt.get("prompt"),
+                                    streaming=prompt.get("streaming"))
 
     def _generate_answer(self, prompt: str,
                          history: List[List[str]] = [],
