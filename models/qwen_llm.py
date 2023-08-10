@@ -66,7 +66,7 @@ class QWenLLMChain(ChatGLMLLMChain):
                     prompt,
                     history=history[-self.history_len:-1] if self.history_len > 0 else [],
                     max_length=self.max_token,
-                    temperature=self.temperature,
+                    # temperature=self.temperature,
                     top_p=self.top_p,
                     top_k=self.top_k,
                     stopping_criteria=stopping_criteria_list
@@ -85,7 +85,7 @@ class QWenLLMChain(ChatGLMLLMChain):
                 prompt,
                 history=history[-self.history_len:] if self.history_len > 0 else [],
                 max_length=self.max_token,
-                temperature=self.temperature,
+                # temperature=self.temperature,
                 top_p=self.top_p,
                 top_k=self.top_k,
                 stopping_criteria=stopping_criteria_list
