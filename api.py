@@ -430,13 +430,6 @@ async def chat(
             return resp, history
 
         resp, history = await asyncio.to_thread(_sync_method, question=question, history=history)
-        answer_result_stream_result = local_doc_qa.llm_model_chain(
-            {"prompt": question, "history": history, "streaming": True})
-        for answer_result in answer_result_stream_result['answer_result_stream']:
-            resp = answer_result.llm_output["answer"]
-            history = answer_result.history
-            pass
-
         return ChatMessage(
             question=question,
             response=resp,

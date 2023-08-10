@@ -1,9 +1,12 @@
 from abc import ABC
 from langchain.llms.base import LLM
-from typing import Optional, List, Any, Dict
+from langchain.callbacks.manager import CallbackManagerForChainRun
+from typing import Optional, List, Any, Dict, Generator
 from models.loader import LoaderCheckPoint
 from models.base import (BaseAnswer,
-                         AnswerResult)
+                         AnswerResult,
+                         AnswerResultStream,
+                         AnswerResultQueueSentinelTokenListenerQueue)
 
 
 class BaichuanLLMChain(BaseAnswer, LLM, ABC):
@@ -13,6 +16,10 @@ class BaichuanLLMChain(BaseAnswer, LLM, ABC):
     checkPoint: LoaderCheckPoint = None
     # history = []
     history_len: int = 10
+    streaming_key: str = "streaming"  #: :meta private:
+    history_key: str = "history"  #: :meta private:
+    prompt_key: str = "prompt"  #: :meta private:
+    output_key: str = "answer_result_stream"  #: :meta private:
 
     def __init__(self, checkPoint: LoaderCheckPoint = None):
         super().__init__()
@@ -33,14 +40,25 @@ class BaichuanLLMChain(BaseAnswer, LLM, ABC):
     def set_history_len(self, history_len: int = 10) -> None:
         self.history_len = history_len
 
-    def _call(self, prompt: Dict[str, Any], stop: Optional[List[str]] = None) -> str:
-        print(f"__call:{prompt}")
-        yield self._generate_answer(prompt=prompt.get("prompt"), history=prompt.get("prompt"),
-                                    streaming=prompt.get("streaming"))
+    def _call(
+            self,
+            inputs: Dict[str, Any],
+            stop: Optional[List[str]] = None,
+            run_manager: Optional[CallbackManagerForChainRun] = None,
+    ) -> Dict[str, Generator]:
+        print(f"__call->inputs:{inputs}")
+        generator = self.generatorAnswer(inputs=inputs, run_manager=run_manager)
+        print(f"__call->generator:{generator}")
+        return {self.output_key: generator}
 
-    def _generate_answer(self, prompt: str,
-                         history: List[List[str]] = [],
-                         streaming: bool = False):
+    def _generate_answer(self,
+                         inputs: Dict[str, Any],
+                         run_manager: Optional[CallbackManagerForChainRun] = None,
+                         generate_with_callback: AnswerResultStream = None) -> None:
+        history = inputs[self.history_key]
+        streaming = inputs[self.streaming_key]
+        prompt = inputs[self.prompt_key]
+        print(f"__call->_generate_answer:{prompt}")
         messages = []
         messages.append({"role": "user", "content": prompt})
         if streaming:
@@ -49,6 +67,7 @@ class BaichuanLLMChain(BaseAnswer, LLM, ABC):
                     messages,
                     stream=True
             )):
+                print(f"_generate_answer->streaming->response:{stream_resp}")
                 self.checkPoint.clear_torch_cache()
                 answer_result = AnswerResult()
                 answer_result.llm_output = {"answer": stream_resp}
@@ -58,6 +77,7 @@ class BaichuanLLMChain(BaseAnswer, LLM, ABC):
                 self.checkPoint.tokenizer,
                 messages
             )
+            print(f"_generate_answer->nostreaming->response:{response}")
             self.checkPoint.clear_torch_cache()
             answer_result = AnswerResult()
             answer_result.llm_output = {"answer": response}
