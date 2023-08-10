@@ -10,6 +10,17 @@ from pydantic import BaseModel
 import torch
 import transformers
 
+import logging
+
+LOG_FORMAT = "%(levelname) %(filename)s %(lineno)d -5s %(asctime)s" "-1d: %(message)s"
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+logging.basicConfig(level=logging.INFO,
+                    format=LOG_FORMAT,
+                    datefmt='%a %d %b %Y %H:%M:%S',
+                    filename='model.log',
+                    filemode='w')
+
 
 class ListenerToken:
     """
@@ -150,14 +161,16 @@ class Iteratorize:
 
 class BaseAnswer(ABC):
     """上层业务包装器.用于结果生成统一api调用"""
+    logger = logger
 
     @property
     @abstractmethod
     def _check_point(self) -> LoaderCheckPoint:
         """Return _check_point of llm."""
+
     def generatorAnswer(self,
                         inputs: Dict[str, Any],
-                        run_manager: Optional[CallbackManagerForChainRun] = None,) -> Generator[Any, str, bool]:
+                        run_manager: Optional[CallbackManagerForChainRun] = None, ) -> Generator[Any, str, bool]:
         def generate_with_callback(callback=None, **kwargs):
             kwargs['generate_with_callback'] = AnswerResultStream(callback_func=callback)
             self._generate_answer(**kwargs)

@@ -61,7 +61,9 @@ class ChatGLMLLMChain(BaseAnswer, Chain, ABC):
             inputs: Dict[str, Any],
             run_manager: Optional[CallbackManagerForChainRun] = None,
     ) -> Dict[str, Generator]:
+        self.logger.debug(inputs)
         generator = self.generatorAnswer(inputs=inputs, run_manager=run_manager)
+        self.logger.debug(generator)
         return {self.output_key: generator}
 
     def _generate_answer(self,
@@ -71,6 +73,7 @@ class ChatGLMLLMChain(BaseAnswer, Chain, ABC):
         history = inputs[self.history_key]
         streaming = inputs[self.streaming_key]
         prompt = inputs[self.prompt_key]
+        self.logger.debug(prompt)
         print(f"__call:{prompt}")
         # Create the StoppingCriteriaList with the stopping strings
         stopping_criteria_list = transformers.StoppingCriteriaList()
@@ -116,4 +119,3 @@ class ChatGLMLLMChain(BaseAnswer, Chain, ABC):
             answer_result.llm_output = {"answer": response}
 
             generate_with_callback(answer_result)
-

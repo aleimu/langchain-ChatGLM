@@ -47,7 +47,9 @@ class BaichuanLLMChain(BaseAnswer, LLM, ABC):
             run_manager: Optional[CallbackManagerForChainRun] = None,
     ) -> Dict[str, Generator]:
         print(f"__call->inputs:{inputs}")
+        self.logger.debug(inputs)
         generator = self.generatorAnswer(inputs=inputs, run_manager=run_manager)
+        self.logger.debug(generator)
         print(f"__call->generator:{generator}")
         return {self.output_key: generator}
 
@@ -58,6 +60,7 @@ class BaichuanLLMChain(BaseAnswer, LLM, ABC):
         history = inputs[self.history_key]
         streaming = inputs[self.streaming_key]
         prompt = inputs[self.prompt_key]
+        self.logger.debug(prompt)
         print(f"__call->_generate_answer:{prompt}")
         messages = []
         messages.append({"role": "user", "content": prompt})
