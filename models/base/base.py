@@ -12,7 +12,7 @@ import transformers
 
 import logging
 
-LOG_FORMAT = "%(levelname) %(filename)s %(lineno)d -5s %(asctime)s" "-1d: %(message)s"
+LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(funcName)s:%(lineno)d - %(message)s'
 logger = logging.getLogger()
 logging.basicConfig(level=logging.INFO,
                     format=LOG_FORMAT,
