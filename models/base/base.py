@@ -14,7 +14,6 @@ import logging
 
 LOG_FORMAT = "%(levelname) %(filename)s %(lineno)d -5s %(asctime)s" "-1d: %(message)s"
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
 logging.basicConfig(level=logging.INFO,
                     format=LOG_FORMAT,
                     datefmt='%a %d %b %Y %H:%M:%S',

@@ -52,13 +52,12 @@ class QWenLLMChain(ChatGLMLLMChain):
         history = inputs[self.history_key]
         streaming = inputs[self.streaming_key]
         prompt = inputs[self.prompt_key]
-        self.logger.debug(prompt)
-        print(f"__call:{prompt}")
+        self.logger.debug(f"qwen_generate_answer__call:{inputs}")
         # Create the StoppingCriteriaList with the stopping strings
         stopping_criteria_list = transformers.StoppingCriteriaList()
         # 定义模型stopping_criteria 队列，在每次响应时将 torch.LongTensor, torch.FloatTensor同步到AnswerResult
-        listenerQueue = AnswerResultQueueSentinelTokenListenerQueue()
-        stopping_criteria_list.append(listenerQueue)
+        # listenerQueue = AnswerResultQueueSentinelTokenListenerQueue()
+        # stopping_criteria_list.append(listenerQueue)
         if streaming:
             history += [[]]
             for inum, (stream_resp, _) in enumerate(self.checkPoint.model.chat_stream(
@@ -67,11 +66,11 @@ class QWenLLMChain(ChatGLMLLMChain):
                     history=history[-self.history_len:-1] if self.history_len > 0 else [],
                     max_length=self.max_token,
                     # temperature=self.temperature,
-                    top_p=self.top_p,
-                    top_k=self.top_k,
-                    stopping_criteria=stopping_criteria_list
+                    # top_p=self.top_p,
+                    # top_k=self.top_k,
+                    # stopping_criteria=stopping_criteria_list
             )):
-                print(f"_generate_answer->streaming->stream_resp:{stream_resp}")
+                self.logger.debug(f"_generate_answer->streaming->stream_resp:{stream_resp}")
                 # self.checkPoint.clear_torch_cache()
                 history[-1] = [prompt, stream_resp]
                 answer_result = AnswerResult()
@@ -90,7 +89,7 @@ class QWenLLMChain(ChatGLMLLMChain):
                 top_k=self.top_k,
                 stopping_criteria=stopping_criteria_list
             )
-            print(f"_generate_answer->nostreaming->response:{response}")
+            self.logger.debug(f"_generate_answer->nostreaming->response:{response}")
             self.checkPoint.clear_torch_cache()
             history += [[prompt, response]]
             answer_result = AnswerResult()
