@@ -114,6 +114,7 @@ class Iteratorize:
             try:
                 ret = self.mfunc(callback=_callback, **self.kwargs)
             except ValueError:
+                traceback.print_exc()
                 pass
             except:
                 traceback.print_exc()

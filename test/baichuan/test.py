@@ -18,7 +18,9 @@ messages.append({"role": "user", "content": "世界上第二高的山峰是哪�
 response = model.chat(tokenizer, messages)
 print(response)
 
+messages = []
+messages.append({"role": "user", "content": "给我讲一个年轻人奋斗创业最终取得成功的故事"})
 for inum, response in enumerate(model.chat(
-        tokenizer, "给我讲一个年轻人奋斗创业最终取得成功的故事", history=[], stream=True
+        tokenizer, messages, stream=True
 )):
     print(inum, response, type(response))

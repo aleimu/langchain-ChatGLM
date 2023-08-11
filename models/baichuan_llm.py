@@ -1,9 +1,8 @@
 import traceback
-from abc import ABC
-from langchain.llms.base import LLM
 from langchain.callbacks.manager import CallbackManagerForChainRun
 from typing import Optional, List, Any, Dict, Generator
 from models.loader import LoaderCheckPoint
+from models.chatglm_llm import ChatGLMLLMChain
 from models.base import (BaseAnswer,
                          AnswerResult,
                          AnswerResultStream,
@@ -11,7 +10,7 @@ from models.base import (BaseAnswer,
 from utils.logger import logger
 
 
-class BaichuanLLMChain(BaseAnswer, LLM, ABC):
+class BaichuanLLMChain(ChatGLMLLMChain):
     max_token: int = 10000
     temperature: float = 0.01
     top_p = 0.9
@@ -39,19 +38,8 @@ class BaichuanLLMChain(BaseAnswer, LLM, ABC):
     def _history_len(self) -> int:
         return self.history_len
 
-    def set_history_len(self, history_len: int = 10) -> None:
+    def set_history_len(self, history_len: int = 0) -> None:
         self.history_len = history_len
-
-    def _call(
-            self,
-            inputs: Dict[str, Any],
-            stop: Optional[List[str]] = None,
-            run_manager: Optional[CallbackManagerForChainRun] = None,
-    ) -> Dict[str, Generator]:
-        logger.debug(inputs)
-        generator = self.generatorAnswer(inputs=inputs, run_manager=run_manager)
-        logger.debug(f"__call->generator:{generator}")
-        return {self.output_key: generator}
 
     def _generate_answer(self,
                          inputs: Dict[str, Any],
@@ -61,7 +49,6 @@ class BaichuanLLMChain(BaseAnswer, LLM, ABC):
             history = inputs[self.history_key]
             streaming = inputs[self.streaming_key]
             prompt = inputs[self.prompt_key]
-            logger.debug(f"__call->_generate_answer:{prompt}")
             messages = []
             messages.append({"role": "user", "content": prompt})
             if streaming:
@@ -70,20 +57,20 @@ class BaichuanLLMChain(BaseAnswer, LLM, ABC):
                         messages,
                         stream=True
                 )):
-                    logger.debug(f"_generate_answer->streaming->response:{stream_resp}")
                     self.checkPoint.clear_torch_cache()
                     answer_result = AnswerResult()
                     answer_result.llm_output = {"answer": stream_resp}
-                    yield answer_result
+                    generate_with_callback(answer_result)
+                self.checkPoint.clear_torch_cache()
             else:
                 response = self.checkPoint.model.chat(
                     self.checkPoint.tokenizer,
                     messages
                 )
-                logger.debug(f"_generate_answer->nostreaming->response:{response}")
                 self.checkPoint.clear_torch_cache()
                 answer_result = AnswerResult()
                 answer_result.llm_output = {"answer": response}
-                yield answer_result
+                generate_with_callback(answer_result)
+            self.checkPoint.clear_torch_cache()
         except Exception:
             traceback.print_exc()
