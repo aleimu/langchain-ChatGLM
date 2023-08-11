@@ -1,3 +1,4 @@
+import traceback
 from abc import ABC
 from langchain.llms.base import LLM
 from langchain.callbacks.manager import CallbackManagerForChainRun
@@ -57,31 +58,34 @@ class BaichuanLLMChain(BaseAnswer, LLM, ABC):
                          inputs: Dict[str, Any],
                          run_manager: Optional[CallbackManagerForChainRun] = None,
                          generate_with_callback: AnswerResultStream = None) -> None:
-        history = inputs[self.history_key]
-        streaming = inputs[self.streaming_key]
-        prompt = inputs[self.prompt_key]
-        self.logger.debug(prompt)
-        print(f"__call->_generate_answer:{prompt}")
-        messages = []
-        messages.append({"role": "user", "content": prompt})
-        if streaming:
-            for inum, stream_resp in enumerate(self.checkPoint.model.chat(
+        try:
+            history = inputs[self.history_key]
+            streaming = inputs[self.streaming_key]
+            prompt = inputs[self.prompt_key]
+            self.logger.debug(prompt)
+            print(f"__call->_generate_answer:{prompt}")
+            messages = []
+            messages.append({"role": "user", "content": prompt})
+            if streaming:
+                for inum, stream_resp in enumerate(self.checkPoint.model.chat(
+                        self.checkPoint.tokenizer,
+                        messages,
+                        stream=True
+                )):
+                    print(f"_generate_answer->streaming->response:{stream_resp}")
+                    self.checkPoint.clear_torch_cache()
+                    answer_result = AnswerResult()
+                    answer_result.llm_output = {"answer": stream_resp}
+                    yield answer_result
+            else:
+                response = self.checkPoint.model.chat(
                     self.checkPoint.tokenizer,
-                    messages,
-                    stream=True
-            )):
-                print(f"_generate_answer->streaming->response:{stream_resp}")
+                    messages
+                )
+                print(f"_generate_answer->nostreaming->response:{response}")
                 self.checkPoint.clear_torch_cache()
                 answer_result = AnswerResult()
-                answer_result.llm_output = {"answer": stream_resp}
+                answer_result.llm_output = {"answer": response}
                 yield answer_result
-        else:
-            response = self.checkPoint.model.chat(
-                self.checkPoint.tokenizer,
-                messages
-            )
-            print(f"_generate_answer->nostreaming->response:{response}")
-            self.checkPoint.clear_torch_cache()
-            answer_result = AnswerResult()
-            answer_result.llm_output = {"answer": response}
-            yield answer_result
+        except Exception:
+            traceback.print_exc()

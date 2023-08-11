@@ -14,11 +14,12 @@ import logging
 
 LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(funcName)s:%(lineno)d - %(message)s'
 logger = logging.getLogger()
-logging.basicConfig(level=logging.INFO,
-                    format=LOG_FORMAT,
-                    datefmt='%a %d %b %Y %H:%M:%S',
-                    filename='model.log',
-                    filemode='w')
+logger.setLevel(logging.DEBUG)
+logging.basicConfig(
+    format=LOG_FORMAT,
+    datefmt='%a %d %b %Y %H:%M:%S',
+    filename='model.log',
+    filemode='w')
 
 
 class ListenerToken:
