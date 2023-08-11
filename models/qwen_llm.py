@@ -38,9 +38,7 @@ class QWenLLMChain(ChatGLMLLMChain):
             inputs: Dict[str, Any],
             run_manager: Optional[CallbackManagerForChainRun] = None,
     ) -> Dict[str, Generator]:
-        self.logger.debug(f"qwen_call:{inputs}")
         generator = self.generatorAnswer(inputs=inputs, run_manager=run_manager)
-        self.logger.debug(generator)
         return {self.output_key: generator}
 
     def _warp_history(self, history):

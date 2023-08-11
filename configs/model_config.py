@@ -1,13 +1,8 @@
 import torch.cuda
 import torch.backends
 import os
-import logging
 import uuid
-
-LOG_FORMAT = "%(levelname) -5s %(asctime)s" "-1d: %(message)s"
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-logging.basicConfig(format=LOG_FORMAT)
+from utils.logger import logger
 
 # 在以下字典中修改属性值，以指定本地embedding模型存储位置
 # 如将 "text2vec": "GanymedeNil/text2vec-large-chinese" 修改为 "text2vec": "User/Downloads/text2vec-large-chinese"
@@ -297,7 +292,7 @@ NLTK_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "nltk_
 
 FLAG_USER_NAME = uuid.uuid4().hex
 
-logger.info(f"""
+print(f"""
 loading model config
 llm device: {LLM_DEVICE}
 embedding device: {EMBEDDING_DEVICE}

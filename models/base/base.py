@@ -9,17 +9,7 @@ from models.loader import LoaderCheckPoint
 from pydantic import BaseModel
 import torch
 import transformers
-
-import logging
-
-LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(funcName)s:%(lineno)d - %(message)s'
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-logging.basicConfig(
-    format=LOG_FORMAT,
-    datefmt='%a %d %b %Y %H:%M:%S',
-    filename='model.log',
-    filemode='w')
+from utils.logger import logger
 
 
 class ListenerToken:
@@ -161,7 +151,6 @@ class Iteratorize:
 
 class BaseAnswer(ABC):
     """上层业务包装器.用于结果生成统一api调用"""
-    logger = logger
 
     @property
     @abstractmethod

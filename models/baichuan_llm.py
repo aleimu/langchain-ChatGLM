@@ -8,6 +8,7 @@ from models.base import (BaseAnswer,
                          AnswerResult,
                          AnswerResultStream,
                          AnswerResultQueueSentinelTokenListenerQueue)
+from utils.logger import logger
 
 
 class BaichuanLLMChain(BaseAnswer, LLM, ABC):
@@ -47,11 +48,9 @@ class BaichuanLLMChain(BaseAnswer, LLM, ABC):
             stop: Optional[List[str]] = None,
             run_manager: Optional[CallbackManagerForChainRun] = None,
     ) -> Dict[str, Generator]:
-        print(f"__call->inputs:{inputs}")
-        self.logger.debug(inputs)
+        logger.debug(inputs)
         generator = self.generatorAnswer(inputs=inputs, run_manager=run_manager)
-        self.logger.debug(generator)
-        print(f"__call->generator:{generator}")
+        logger.debug(f"__call->generator:{generator}")
         return {self.output_key: generator}
 
     def _generate_answer(self,
@@ -62,8 +61,7 @@ class BaichuanLLMChain(BaseAnswer, LLM, ABC):
             history = inputs[self.history_key]
             streaming = inputs[self.streaming_key]
             prompt = inputs[self.prompt_key]
-            self.logger.debug(prompt)
-            print(f"__call->_generate_answer:{prompt}")
+            logger.debug(f"__call->_generate_answer:{prompt}")
             messages = []
             messages.append({"role": "user", "content": prompt})
             if streaming:
@@ -72,7 +70,7 @@ class BaichuanLLMChain(BaseAnswer, LLM, ABC):
                         messages,
                         stream=True
                 )):
-                    print(f"_generate_answer->streaming->response:{stream_resp}")
+                    logger.debug(f"_generate_answer->streaming->response:{stream_resp}")
                     self.checkPoint.clear_torch_cache()
                     answer_result = AnswerResult()
                     answer_result.llm_output = {"answer": stream_resp}
@@ -82,7 +80,7 @@ class BaichuanLLMChain(BaseAnswer, LLM, ABC):
                     self.checkPoint.tokenizer,
                     messages
                 )
-                print(f"_generate_answer->nostreaming->response:{response}")
+                logger.debug(f"_generate_answer->nostreaming->response:{response}")
                 self.checkPoint.clear_torch_cache()
                 answer_result = AnswerResult()
                 answer_result.llm_output = {"answer": response}
