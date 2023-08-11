@@ -38,7 +38,7 @@ class BaichuanLLMChain(ChatGLMLLMChain):
     def _history_len(self) -> int:
         return self.history_len
 
-    def set_history_len(self, history_len: int = 0) -> None:
+    def set_history_len(self, history_len: int = 10) -> None:
         self.history_len = history_len
 
     def _generate_answer(self,
@@ -51,7 +51,9 @@ class BaichuanLLMChain(ChatGLMLLMChain):
             prompt = inputs[self.prompt_key]
             messages = []
             messages.append({"role": "user", "content": prompt})
+            history = history[-self.history_len:-1] if self.history_len > 0 else []
             if streaming:
+                history += [[]]
                 for inum, stream_resp in enumerate(self.checkPoint.model.chat(
                         self.checkPoint.tokenizer,
                         messages,
@@ -59,6 +61,8 @@ class BaichuanLLMChain(ChatGLMLLMChain):
                 )):
                     self.checkPoint.clear_torch_cache()
                     answer_result = AnswerResult()
+                    history[-1] = [prompt, stream_resp]
+                    answer_result.history = history
                     answer_result.llm_output = {"answer": stream_resp}
                     generate_with_callback(answer_result)
                 self.checkPoint.clear_torch_cache()
@@ -69,6 +73,8 @@ class BaichuanLLMChain(ChatGLMLLMChain):
                 )
                 self.checkPoint.clear_torch_cache()
                 answer_result = AnswerResult()
+                history += [[prompt, response]]
+                answer_result.history = history
                 answer_result.llm_output = {"answer": response}
                 generate_with_callback(answer_result)
             self.checkPoint.clear_torch_cache()
