@@ -74,7 +74,6 @@ class ChatGLMLLMChain(BaseAnswer, Chain, ABC):
         streaming = inputs[self.streaming_key]
         prompt = inputs[self.prompt_key]
         self.logger.debug(prompt)
-        print(f"__call:{prompt}")
         # Create the StoppingCriteriaList with the stopping strings
         stopping_criteria_list = transformers.StoppingCriteriaList()
         # 定义模型stopping_criteria 队列，在每次响应时将 torch.LongTensor, torch.FloatTensor同步到AnswerResult
@@ -92,8 +91,6 @@ class ChatGLMLLMChain(BaseAnswer, Chain, ABC):
                     top_k=self.top_k,
                     stopping_criteria=stopping_criteria_list
             )):
-                print(f"_generate_answer->streaming->stream_resp:{stream_resp}")
-                # self.checkPoint.clear_torch_cache()
                 history[-1] = [prompt, stream_resp]
                 answer_result = AnswerResult()
                 answer_result.history = history
@@ -111,7 +108,6 @@ class ChatGLMLLMChain(BaseAnswer, Chain, ABC):
                 top_k=self.top_k,
                 stopping_criteria=stopping_criteria_list
             )
-            print(f"_generate_answer->nostreaming->response:{response}")
             self.checkPoint.clear_torch_cache()
             history += [[prompt, response]]
             answer_result = AnswerResult()

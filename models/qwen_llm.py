@@ -43,6 +43,11 @@ class QWenLLMChain(ChatGLMLLMChain):
         self.logger.debug(generator)
         return {self.output_key: generator}
 
+    def _warp_history(self, history):
+        history = history[-self.history_len:-1] if self.history_len > 0 else []
+        history = [[str(x), y] for x, y in history]
+        return history
+
     def _generate_answer(self,
                          inputs: Dict[str, Any],
                          run_manager: Optional[CallbackManagerForChainRun] = None,
@@ -52,10 +57,6 @@ class QWenLLMChain(ChatGLMLLMChain):
             history = inputs[self.history_key]
             streaming = inputs[self.streaming_key]
             prompt = inputs[self.prompt_key]
-            self.logger.debug(f"qwen_generate_answer__call:{inputs}")
-            history = history[-self.history_len:-1] if self.history_len > 0 else []
-            history = [[str(x), y] for x, y in history]
-            self.logger.debug(f"history:{history}")
             # Create the StoppingCriteriaList with the stopping strings
             # stopping_criteria_list = transformers.StoppingCriteriaList()
             # 定义模型stopping_criteria 队列，在每次响应时将 torch.LongTensor, torch.FloatTensor同步到AnswerResult
@@ -66,14 +67,13 @@ class QWenLLMChain(ChatGLMLLMChain):
                 for inum, response in enumerate(self.checkPoint.model.chat_stream(
                         self.checkPoint.tokenizer,
                         prompt,
-                        history=history,
+                        history=self._warp_history(history),
                         # max_length=self.max_token,
                         # temperature=self.temperature,
                         # top_p=self.top_p,
                         # top_k=self.top_k,
                         # stopping_criteria=stopping_criteria_list
                 )):
-                    self.logger.debug(f"_generate_answer->streaming->stream_resp:{response}")
                     history[-1] = [prompt, response]
                     answer_result = AnswerResult()
                     answer_result.history = history
@@ -85,14 +85,13 @@ class QWenLLMChain(ChatGLMLLMChain):
                 response, _ = self.checkPoint.model.chat(
                     self.checkPoint.tokenizer,
                     prompt,
-                    history=history[-self.history_len:] if self.history_len > 0 else [],
+                    history=self._warp_history(history),
                     # max_length=self.max_token,
                     # temperature=self.temperature,
                     # top_p=self.top_p,
                     # top_k=self.top_k,
                     # stopping_criteria=stopping_criteria_list
                 )
-                self.logger.debug(f"_generate_answer->nostreaming->response:{response}")
                 self.checkPoint.clear_torch_cache()
                 history += [[prompt, response]]
                 answer_result = AnswerResult()
