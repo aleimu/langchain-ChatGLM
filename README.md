@@ -19,7 +19,7 @@
 * [路线图](README.md#路线图)
 * [项目交流群](README.md#项目交流群)
 
---- 
+---
 
 ## 介绍
 
@@ -41,11 +41,12 @@
 
 🚩 本项目未涉及微调、训练过程，但可利用微调或训练对本项目效果进行优化。
 
-🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/imClumsyPanda/langchain-ChatGLM/langchain-ChatGLM) 中 v4 版本所使用代码已更新至本项目 `0.2.0` 版本。
+🌐 [AutoDL 镜像](https://www.codewithgpu.com/i/imClumsyPanda/langchain-ChatGLM/langchain-ChatGLM) 中 `v5` 版本所使用代码已更新至本项目 `0.2.0` 版本。
 
-🐳 [Docker 镜像](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.0) 
+🐳 [Docker 镜像](registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.0)
 
 💻 一行命令运行 Docker：
+
 ```shell
 docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/chatchat:0.2.0
 ```
@@ -56,7 +57,7 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 参见 [版本更新日志](https://github.com/imClumsyPanda/langchain-ChatGLM/releases)。
 
-从`0.1.x`升级过来的用户请注意，在完成[“开发部署 3 设置配置项”](docs/INSTALL.md)之后，需要将现有知识库迁移到新格式，具体见[知识库初始化与迁移](docs/INSTALL.md#知识库初始化与迁移)。
+从 `0.1.x` 升级过来的用户请注意，需要按照[开发部署](README.md#3.-开发部署)过程操作，将现有知识库迁移到新格式，具体见[知识库初始化与迁移](docs/INSTALL.md#知识库初始化与迁移)。
 
 ### `0.2.0` 版本与 `0.1.x` 版本区别
 
@@ -143,11 +144,11 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 ```
 
 - 该版本镜像大小 `33.9GB`，使用 `v0.2.0`，以 `nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04` 为基础镜像
-- 该版本内置一个 `embedding` 模型：`m3e-large`，内置 `fastchat+chatglm2-6b-32k`
+- 该版本内置一个 `embedding` 模型：`m3e-large`，内置 `chatglm2-6b-32k`
 - 该版本目标为方便一键部署使用，请确保您已经在Linux发行版上安装了NVIDIA驱动程序
 - 请注意，您不需要在主机系统上安装CUDA工具包，但需要安装 `NVIDIA Driver` 以及 `NVIDIA Container Toolkit`，请参考[安装指南](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
 - 首次拉取和启动均需要一定时间，首次启动时请参照下图使用 `docker logs -f <container id>` 查看日志
-- 如遇到启动过程卡在 `Waiting..` 步骤，建议使用`docker exec -it <container id> bash` 进入 `/logs/` 目录查看对应阶段日志
+- 如遇到启动过程卡在 `Waiting..` 步骤，建议使用 `docker exec -it <container id> bash` 进入 `/logs/` 目录查看对应阶段日志
 
 ---
 
@@ -161,8 +162,7 @@ docker run -d --gpus all -p 80:8501 registry.cn-beijing.aliyuncs.com/chatchat/ch
 
 参见 [开发环境准备](docs/INSTALL.md)。
 
-**请注意：** `0.2.0`及更新版本的依赖包与`0.1.x`版本依赖包可能发生冲突，强烈建议新建环境后重新安装依赖包。
-
+**请注意：** `0.2.0` 及更新版本的依赖包与 `0.1.x` 版本依赖包可能发生冲突，强烈建议新建环境后重新安装依赖包。
 
 ### 2. 下载模型至本地
 
@@ -190,7 +190,7 @@ $ git clone https://huggingface.co/moka-ai/m3e-base
 llm_model_dict={
                 "chatglm2-6b": {
                         "local_model_path": "/Users/xxx/Downloads/chatglm2-6b",
-                        "api_base_url": "http://localhost:8888/v1",  # "name"修改为fastchat服务中的"api_base_url"
+                        "api_base_url": "http://localhost:8888/v1",  # "name"修改为 FastChat 服务中的"api_base_url"
                         "api_key": "EMPTY"
                     },
                 }
@@ -209,18 +209,32 @@ embedding_model_dict = {
 当前项目的知识库信息存储在数据库中，在正式运行项目之前请先初始化数据库（我们强烈建议您在执行操作前备份您的知识文件）。
 
 - 如果您是从 `0.1.x` 版本升级过来的用户，针对已建立的知识库，请确认知识库的向量库类型、Embedding 模型 `configs/model_config.py` 中默认设置一致，如无变化只需以下命令将现有知识库信息添加到数据库即可：
-    ```shell
-    $ python init_database.py
-    ``` 
+
+  ```shell
+  $ python init_database.py
+  ```
   
 - 如果您是第一次运行本项目，知识库尚未建立，或者配置文件中的知识库类型、嵌入模型发生变化，需要以下命令初始化或重建知识库：
-    ```shell
-    $ python init_database.py --recreate-vs
-    ```
+
+  ```shell
+  $ python init_database.py --recreate-vs
+  ```
 
 ### 5. 启动 API 服务或 Web UI
 
 #### 5.1 启动 LLM 服务
+
+如需使用开源模型进行本地部署，需首先启动 LLM 服务，启动方式分为三种：
+
+- [基于多进程脚本 llm_api.py 启动 LLM 服务](README.md#5.1.1-基于多进程脚本-llm_api.py-启动-LLM-服务)
+- [基于命令行脚本 llm_api_launch.py 启动 LLM 服务](README.md#5.1.2-基于命令行脚本-llm_api_launch.py-启动-LLM-服务)
+- [LoRA 加载](README.md#5.1.3-LoRA-加载)
+
+三种方式只需选择一个即可，具体操作方式详见 5.1.1 - 5.1.3。
+
+如果启动在线的API服务（如 OPENAI 的 API 接口），则无需启动 LLM 服务，即 5.1 小节的任何命令均无需启动。
+
+##### 5.1.1 基于多进程脚本 llm_api.py 启动 LLM 服务
 
 在项目根目录下，执行 [server/llm_api.py](server/llm_api.py) 脚本启动 **LLM 模型**服务：
 
@@ -228,17 +242,72 @@ embedding_model_dict = {
 $ python server/llm_api.py
 ```
 
-以如上方式启动LLM服务会以nohup命令在后台运行 fastchat 服务，如需停止服务，可以运行如下命令：
+项目支持多卡加载，需在 llm_api.py 中修改 create_model_worker_app 函数中，修改如下三个参数:
+```python
+gpus=None, 
+num_gpus=1, 
+max_gpu_memory="20GiB"
+```
+其中，`gpus` 控制使用的显卡的ID，如果 "0,1"; 
+
+`num_gpus` 控制使用的卡数; 
+
+`max_gpu_memory` 控制每个卡使用的显存容量。
+
+##### 5.1.2 基于命令行脚本 llm_api_launch.py 启动 LLM 服务
+
+在项目根目录下，执行 [server/llm_api_launch.py](server/llm_api.py) 脚本启动 **LLM 模型**服务：
+
+```shell
+$ python server/llm_api_launch.py
+```
+
+该方式支持启动多个worker，示例启动方式：
+
+```shell
+$ python server/llm_api_launch.py --model-path-addresss model1@host1@port1 model2@host2@port2
+```
+
+如果要启动多卡加载，示例命令如下：
+
+```shell
+$ python server/llm_api_launch.py --gpus 0,1 --num-gpus 2 --max-gpu-memory 10GiB
+```
+
+注：以如上方式启动LLM服务会以nohup命令在后台运行 fastchat 服务，如需停止服务，可以运行如下命令,但该脚本**仅适用于linux和mac平台**：
 
 ```shell
 $ python server/llm_api_shutdown.py --serve all 
 ```
 
-亦可单独停止一个 fastchat 服务模块，可选 [`all`, `controller`, `model_worker`, `openai_api_server`]
+亦可单独停止一个 FastChat 服务模块，可选 [`all`, `controller`, `model_worker`, `openai_api_server`]
+
+##### 5.1.3 LoRA 加载
+
+本项目基于 FastChat 加载 LLM 服务，故需以 FastChat 加载 LoRA 路径，即保证路径名称里必须有 peft 这个词，配置文件的名字为 adapter_config.json，peft 路径下包含 model.bin 格式的 LoRA 权重。
+
+示例代码如下：
+
+```shell
+PEFT_SHARE_BASE_WEIGHTS=true python3 -m fastchat.serve.multi_model_worker \
+    --model-path /data/chris/peft-llama-dummy-1 \
+    --model-names peft-dummy-1 \
+    --model-path /data/chris/peft-llama-dummy-2 \
+    --model-names peft-dummy-2 \
+    --model-path /data/chris/peft-llama-dummy-3 \
+    --model-names peft-dummy-3 \
+    --num-gpus 2
+```
+
+详见 [FastChat 相关 PR](https://github.com/lm-sys/fastchat/pull/1905#issuecomment-1627801216)
 
 #### 5.2 启动 API 服务
 
-启动 **LLM 服务**后，执行 [server/api.py](server/api.py) 脚本启动 **API** 服务
+本地部署情况下，按照 [5.1 节](README.md#5.1-启动-LLM-服务)**启动 LLM 服务后**，再执行 [server/api.py](server/api.py) 脚本启动 **API** 服务；
+
+在线调用API服务的情况下，直接执执行 [server/api.py](server/api.py) 脚本启动 **API** 服务；
+
+调用命令示例：
 
 ```shell
 $ python server/api.py
@@ -252,13 +321,13 @@ $ python server/api.py
 
 #### 5.3 启动 Web UI 服务
 
-执行 [webui.py](webui.py) 启动 **Web UI** 服务（默认使用端口`8501`）
+按照 [5.2 节](README.md#5.2-启动-API-服务)**启动 API 服务后**，执行 [webui.py](webui.py) 启动 **Web UI** 服务（默认使用端口 `8501`）
 
 ```shell
 $ streamlit run webui.py
 ```
 
-使用 Langchain-Chatchat 主题色启动 **Web UI** 服务（默认使用端口`8501`）
+使用 Langchain-Chatchat 主题色启动 **Web UI** 服务（默认使用端口 `8501`）
 
 ```shell
 $ streamlit run webui.py --theme.base "light" --theme.primaryColor "#165dff" --theme.secondaryBackgroundColor "#f5f5f5" --theme.textColor "#000000"
@@ -279,6 +348,55 @@ $ streamlit run webui.py --server.port 666
   ![](img/webui_0813_1.png)
 
 ---
+
+### 6 一键启动：
+
+#### 6.1 api服务一键启动脚本
+
+新增api一键启动脚本，可一键开启fastchat后台服务及本项目提供的langchain api服务,调用示例：
+
+调用默认模型：
+
+```shell
+$ python server/api_allinone.py
+```
+
+加载多个非默认模型：
+
+```shell
+$ python server/api_allinone.py --model-path-address model1@host1@port1 model2@host2@port2
+```
+
+多卡启动：
+
+```shell
+python server/api_allinone.py --model-path-address model@host@port --num-gpus 2 --gpus 0,1 --max-gpu-memory 10GiB
+```
+其他参数详见各脚本及fastchat服务说明。
+
+#### 6.2 webui一键启动脚本
+加载本地模型：
+```shell
+$ python webui_allinone.py
+```
+
+调用远程api服务：
+```shell
+$ python webui_allinone.py --use-remote-api
+```
+后台运行webui服务：
+```shell
+$ python webui_allinone.py --nohup
+```
+加载多个非默认模型：
+```shell
+$ python webui_allinone.py --model-path-address model1@host1@port1 model2@host2@port2 
+```
+多卡启动：
+```
+python webui_alline.py --model-path-address model@host@port --num-gpus 2 --gpus 0,1 --max-gpu-memory 10GiB
+```
+其他参数详见各脚本及fastchat服务说明。
 
 ## 常见问题
 
@@ -308,11 +426,11 @@ $ streamlit run webui.py --server.port 666
     - [X] Bing 搜索
     - [X] DuckDuckGo 搜索
   - [ ] Agent 实现
-- [x] LLM 模型接入
-  - [x] 支持通过调用 [fastchat](https://github.com/lm-sys/FastChat) api 调用 llm
+- [X] LLM 模型接入
+  - [X] 支持通过调用 [FastChat](https://github.com/lm-sys/fastchat) api 调用 llm
   - [ ] 支持 ChatGLM API 等 LLM API 的接入
 - [X] Embedding 模型接入
-  - [x] 支持调用 HuggingFace 中各开源 Emebdding 模型
+  - [X] 支持调用 HuggingFace 中各开源 Emebdding 模型
   - [ ] 支持 OpenAI Embedding API 等 Embedding API 的接入
 - [X] 基于 FastAPI 的 API 方式调用
 - [X] Web UI
@@ -322,6 +440,6 @@ $ streamlit run webui.py --server.port 666
 
 ## 项目交流群
 
-<img src="img/qr_code_51.jpg" alt="二维码" width="300" height="300" />
+<img src="img/qr_code_52.jpg" alt="二维码" width="300" height="300" />
 
 🎉 langchain-ChatGLM 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
