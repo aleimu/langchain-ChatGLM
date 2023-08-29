@@ -5,12 +5,12 @@ from .model_config import LLM_MODEL, LLM_DEVICE
 OPEN_CROSS_DOMAIN = False
 
 # 各服务器默认绑定host
-DEFAULT_BIND_HOST = "127.0.0.1"
+DEFAULT_BIND_HOST = "0.0.0.0"
 
 # webui.py server
 WEBUI_SERVER = {
     "host": DEFAULT_BIND_HOST,
-    "port": 8501,
+    "port": 7680,
 }
 
 # api.py server
