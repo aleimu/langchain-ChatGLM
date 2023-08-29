@@ -7,6 +7,7 @@ from configs.model_config import (
     KB_ROOT_PATH,
     LLM_MODEL,
     SCORE_THRESHOLD,
+    SCORE_THRESHOLD_MAX,
     VECTOR_SEARCH_TOP_K,
     SEARCH_ENGINE_TOP_K,
     logger,

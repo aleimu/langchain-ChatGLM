@@ -1,7 +1,7 @@
 from fastapi import Body, Request
 from fastapi.responses import StreamingResponse
 from configs.model_config import (llm_model_dict, LLM_MODEL, PROMPT_TEMPLATE,
-                                  VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD)
+                                  VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD, SCORE_THRESHOLD_MAX)
 from server.chat.utils import wrap_done
 from server.utils import BaseResponse
 from langchain.chat_models import ChatOpenAI
@@ -21,7 +21,8 @@ from server.knowledge_base.kb_doc_api import search_docs
 def knowledge_base_chat(query: str = Body(..., description="用户输入", examples=["你好"]),
                         knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
                         top_k: int = Body(VECTOR_SEARCH_TOP_K, description="匹配向量数"),
-                        score_threshold: float = Body(SCORE_THRESHOLD, description="知识库匹配相关度阈值，取值范围在0-1之间，SCORE越小，相关度越高，取到1相当于不筛选，建议设置在0.5左右", ge=0, le=1),
+                        score_threshold: float = Body(
+                            SCORE_THRESHOLD, description=f"知识库匹配相关度阈值，取值范围在0-{SCORE_THRESHOLD_MAX}之间，SCORE越小，相关度越高，取到1相当于不筛选，建议设置在0.5左右", ge=0, le=SCORE_THRESHOLD_MAX),
                         history: List[History] = Body([],
                                                       description="历史对话",
                                                       examples=[[
