@@ -11,14 +11,14 @@ start_services() {
     python3 "$SCRIPT_DIR/init_database.py" --recreate-vs
 
     echo "Starting LLM API Service..."
-    nohup python3 "$SCRIPT_DIR/server/llm_api.py" > "$SCRIPT_DIR/logs/llmapi_srv.log" 2>&1 &
+    # nohup python3 "$SCRIPT_DIR/server/llm_api.py" > "$SCRIPT_DIR/logs/llmapi_srv.log" 2>&1 &
 
     echo "Starting Chatchat API Service..."
-    nohup python3 "$SCRIPT_DIR/server/api.py" > "$SCRIPT_DIR/logs/api_srv.log" 2>&1 &
+    # nohup python3 "$SCRIPT_DIR/server/api.py" > "$SCRIPT_DIR/logs/api_srv.log" 2>&1 &
 
     echo "Starting WebUI Service..."
-    nohup streamlit run "$SCRIPT_DIR/webui.py" --browser.gatherUsageStats True --theme.base "light" --theme.primaryColor "#165dff" --theme.secondaryBackgroundColor "#f5f5f5" --theme.textColor "#000000" > "$SCRIPT_DIR/logs/webui_srv.log" 2>&1 &
-
+    # nohup streamlit run "$SCRIPT_DIR/webui.py" --browser.gatherUsageStats True --theme.base "light" --theme.primaryColor "#165dff" --theme.secondaryBackgroundColor "#f5f5f5" --theme.textColor "#000000" > "$SCRIPT_DIR/logs/webui_srv.log" 2>&1 &
+    python3 startup.py -a   > "$SCRIPT_DIR/logs/api_srv.log" 2>&1 &
     echo "All services started."
 }
 
@@ -30,6 +30,8 @@ stop_services() {
     pkill -9 -ef api.py
     pkill -9 -ef streamlit
     # Additional cleanup if needed
+    # mac设备上的grep命令可能不支持grep -P选项，请使用Homebrew安装;或使用ggrep命令
+    ps -eo pid,user,cmd|grep -P 'server/api.py|webui.py|fastchat.serve|multiprocessing'|grep -v grep|awk '{print $1}'|xargs kill -9
 
     echo "All services stopped."
 }

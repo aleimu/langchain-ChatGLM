@@ -53,6 +53,10 @@ def create_app():
     app.post("/chat/fastchat",
              tags=["Chat"],
              summary="与llm模型对话(直接与fastchat api对话)")(openai_chat)
+    
+    app.post("/embeddings",
+             tags=["Chat"],
+             summary="查询向量")(openai_chat)
 
     app.post("/chat/chat",
              tags=["Chat"],

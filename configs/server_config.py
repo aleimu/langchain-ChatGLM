@@ -10,7 +10,7 @@ DEFAULT_BIND_HOST = "0.0.0.0"
 # webui.py server
 WEBUI_SERVER = {
     "host": DEFAULT_BIND_HOST,
-    "port": 7680,
+    "port": 7860,
 }
 
 # api.py server
